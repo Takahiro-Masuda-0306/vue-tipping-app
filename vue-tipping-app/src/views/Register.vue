@@ -21,47 +21,26 @@
 </template>
 
 <script>
-import firebase from 'firebase';
-import 'firebase/auth';
-
 export default {
   data() {
     return {
+      // v-modelの要素
       email: '',
       password: '',
-      errors: []
+    }
+  },
+  computed: {
+    // actionでの操作で変更
+    errors() {
+      return this.$store.getters.errors;
     }
   },
   methods: {
     registerUser() {
-      firebase 
-        .auth()
-        .createUserWithEmailAndPassword(this.email, this.password)
-        .then(response => {
-          const user = response.user;
-          firebase
-            .database()
-            .ref('users')
-            .child(user.uid)
-            .set({
-              user_id: user.uid,
-              email: user.email
-            })
-            .then(() => {
-              this.$router.push('/');
-            })
-            .catch(error => {
-              console.log(error);
-            })
-        })
-        .catch(error => {
-          if(error.code === 'auth/email-already-in-use') {
-            this.errors.push('このメールアドレスはすでに使われています。');
-          } else {
-            this.errors.push('入力されたメールアドレスかパスワードに問題があります。')
-          }
-        })
-        this.password = ''
+      this.$store.state.email = this.email;
+      this.$store.state.password = this.password;
+      this.$store.dispatch('registerUser');
+      this.password = '';
     }
   }
 }
