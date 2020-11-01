@@ -1,16 +1,16 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import firebase from "firebase";
-import router from './router'
-import "firebase/auth";
+import Vue from 'vue';
+import Vuex from 'vuex';
+import firebase from 'firebase';
+import router from './router';
+import 'firebase/auth';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    email: "",
-    password: "",
-    user_id: "",
+    email: '',
+    password: '',
+    user_id: '',
     errors: [],
   },
   // gettersに呼び出すstateを記述。
@@ -32,30 +32,44 @@ export default new Vuex.Store({
           const user = response.user;
           firebase
             .database()
-            .ref("users")
+            .ref('users')
             .child(user.uid)
             .set({
               user_id: user.uid,
               email: user.email,
             })
             .then(() => {
-              router.push("/");
+              router.push('/');
             })
             .catch((error) => {
               console.log(error);
             });
         })
         .catch((error) => {
-          if (error.code === "auth/email-already-in-use") {
+          if (error.code === 'auth/email-already-in-use') {
             context.state.errors.push(
-              "このメールアドレスはすでに使われています。"
+              'このメールアドレスはすでに使われています。'
             );
           } else {
             context.state.errors.push(
-              "入力されたメールアドレスかパスワードに問題があります。"
+              '入力されたメールアドレスかパスワードに問題があります。'
             );
           }
         });
+    },
+    signIn(context) {
+      firebase
+        .auth()
+        .signInWithEmailAndPassword(context.state.email, context.state.password)
+        .then(() => {
+          router.push('/');
+        })
+        .catch(() => {
+          context.state.errors.push(
+            'メールアドレスかパスワードに誤りがあります。'
+          );
+        });
+      this.password = '';
     },
   },
 });

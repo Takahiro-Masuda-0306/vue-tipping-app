@@ -17,7 +17,7 @@ export default new Router({
         firebase.auth().onAuthStateChanged(user => {
           if(user) {
             next();
-          } else{
+          } else {
             next('/signin');
           }
         })
