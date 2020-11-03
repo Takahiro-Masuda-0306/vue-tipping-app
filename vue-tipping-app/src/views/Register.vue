@@ -4,6 +4,10 @@
       <h2 class='text-center col-sm-4 offset-sm-4 mb-4 mt-4'>ユーザー登録</h2>
       <form class='d-block col-8 offset-2' @submit.prevent='registerUser'>
         <div class='form-group'>
+          <label for='name'>ユーザー名</label>
+          <input id='name' type='text' v-model='name' class='form-control' />
+        </div>
+        <div class='form-group'>
           <label for='email'>メールアドレス</label>
           <input id='email' type='email' v-model='email' class='form-control' />
         </div>
@@ -29,6 +33,7 @@
 export default {
   data() {
     return {
+      name: '',
       email: '',
       password: '',
     };
@@ -40,8 +45,9 @@ export default {
   },
   methods: {
     registerUser() {
-      this.$store.state.email = this.email;
-      this.$store.state.password = this.password;
+      this.$store.commit('setName', this.name);
+      this.$store.commit('setEmail', this.email);
+      this.$store.commit('setPassword', this.password);
       this.$store.dispatch('registerUser');
       this.password = '';
     },

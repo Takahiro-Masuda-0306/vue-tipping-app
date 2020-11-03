@@ -8,25 +8,59 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
+    id: '',
+    name: '',
     email: '',
     password: '',
-    user_id: '',
+    balance: 500,
+    other_user_balance: 0,
+    users: [],
     errors: [],
   },
-  // gettersに呼び出すstateを記述。
   getters: {
-    errors: (state) => state.errors,
+    name: state => state.name,
+    email: state => state.email,
+    password: state => state.password,
+    balance: state => state.balance,
+    other_user_balance: state => state.other_user_balance,
+    errors: state => state.errors,
+    users: state => state.users,
   },
-  // actionsとmutationsでstateを変更する。
-  // actionsは非同期処理、mutationsは同期処理。
-  // mutationsをactionsからcommitして呼び出すのがベター。
+  mutations: {
+    setId(state, id) {
+      state.id = id;
+    },
+    setEmail(state, email) {
+      state.email = email;
+    },
+    setPassword(state, password) {
+      state.password = password;
+    },
+    setName(state, name) {
+      state.name = name;
+    },
+    setBalance(state, balance) {
+      state.balance = balance;
+    },
+    setOtherUserBalance(state, other_user_balance) {
+      state.other_user_balance = other_user_balance;
+    },
+    setUsers(state, key, user) {
+      if(key !== user.id ) {
+        state.users.push(user);
+      }
+    },
+    setErrors(state, error) {
+      state.errors.push(error);
+    },
+  },
   actions: {
     registerUser(context) {
       firebase
         .auth()
         .createUserWithEmailAndPassword(
-          context.state.email,
-          context.state.password
+          context.getters.email,
+          context.getters.password
         )
         .then((response) => {
           const user = response.user;
@@ -35,8 +69,10 @@ export default new Vuex.Store({
             .ref('users')
             .child(user.uid)
             .set({
-              user_id: user.uid,
+              id: user.uid,
               email: user.email,
+              name: context.getters.name,
+              balance: context.getters.balance,
             })
             .then(() => {
               router.push('/');
@@ -47,11 +83,11 @@ export default new Vuex.Store({
         })
         .catch((error) => {
           if (error.code === 'auth/email-already-in-use') {
-            context.state.errors.push(
+            context.getters.errors.push(
               'このメールアドレスはすでに使われています。'
             );
           } else {
-            context.state.errors.push(
+            context.getters.errors.push(
               '入力されたメールアドレスかパスワードに問題があります。'
             );
           }
@@ -60,16 +96,48 @@ export default new Vuex.Store({
     signIn(context) {
       firebase
         .auth()
-        .signInWithEmailAndPassword(context.state.email, context.state.password)
-        .then(() => {
+        .signInWithEmailAndPassword(context.getters.email, context.getters.password)
+        .then((response) => {
+          const user = response.user;
+
+          firebase
+            .database()
+            .ref('users')
+            .child(user.uid)
+            .on('value', snapshot => {
+              const snapshotValue = snapshot.val();
+              context.commit('setId', snapshotValue.id);
+              context.commit('setName', snapshotValue.name);
+              context.commit('setEmail', snapshotValue.email);
+              context.commit('setBalance', snapshotValue.balance);
+            });
+
+          firebase
+            .database()
+            .ref('users')
+            .on('value', snapshot => {
+              context.commit('setUsers', snapshot.key, snapshot.val());
+            });
+
           router.push('/');
         })
         .catch(() => {
-          context.state.errors.push(
-            'メールアドレスかパスワードに誤りがあります。'
-          );
+          context.commit('setErrors', 'メールアドレスかパスワードに誤りがあります。');
         });
       this.password = '';
     },
+    // signOut() {
+    //   firebase
+    //     .auth()
+    //     .signOut();
+    // },
+    // setOtherUserBalance(context, user_id) {
+    //   firebase
+    //     .auth('users')
+    //     .ref(user_id)
+    //     .on('value', snapshot => {
+    //       context.commit('setOtherUserBalance', snapshot.val().balance);
+    //     });
+    // }
   },
 });
