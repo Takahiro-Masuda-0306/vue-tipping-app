@@ -1,10 +1,10 @@
 <template>
   <div class="container">
-    <div class="d-flex justify-content-between">
-      <!-- <p>{{name}}さんようこそ!</p> -->
-      <!-- <p>残高：{{balance}}</p> -->
+    <!-- <div class="d-flex justify-content-between"> -->
+      <!-- <p>{{ user.name }}さんようこそ!</p> -->
+      <!-- <p>残高：{{ user.balance }}</p> -->
       <!-- <button class="btn btn-danger" @click="signOut">ログアウト</button> -->
-    </div>
+    <!-- </div> -->
     <!-- <div>
       <h2 class="text-center mb-4 mt-4">ユーザー一覧</h2>
     </div> -->
@@ -13,7 +13,7 @@
         <div class="col-sm-6">
           <p>{{ user.name }}</p>
         </div>
-        <div class="col-sm-6" v-for="user in users" :key="user.id">
+        <div class="col-sm-6">
           <button class="btn btn-info" @click="confirmOtherUserBalance(user.id)">Walletを見る</button>
           <button class="btn btn-info">送る</button>
         </div>
@@ -33,14 +33,8 @@ export default {
   //   }
   // },
   // computed: {
-  //   name() {
-  //     return this.$store.getters.name;
-  //   },
-  //   email() {
-  //     return this.$store.getters.email;
-  //   },
-  //   balance() {
-  //     return this.$store.getters.balance;
+  //   user() {
+  //     return this.$store.getters.user;
   //   },
   //   other_user_balance() {
   //     return this.$store.getters.other_user_balance;

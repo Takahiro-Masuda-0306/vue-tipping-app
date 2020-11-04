@@ -8,39 +8,42 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    id: '',
-    name: '',
-    email: '',
-    password: '',
-    balance: 500,
+    user: {
+      id: '',
+      name: '',
+      email: '',
+      password: '',
+      balance: 500,
+    },
     other_user_balance: 0,
     users: [],
     errors: [],
   },
   getters: {
-    name: state => state.name,
-    email: state => state.email,
-    password: state => state.password,
-    balance: state => state.balance,
+    // name: state => state.user.name,
+    // email: state => state.user.email,
+    // password: state => state.user.password,
+    // balance: state => state.user.balance,
+    user: state => state.user,
     other_user_balance: state => state.other_user_balance,
     errors: state => state.errors,
     users: state => state.users,
   },
   mutations: {
     setId(state, id) {
-      state.id = id;
-    },
-    setEmail(state, email) {
-      state.email = email;
-    },
-    setPassword(state, password) {
-      state.password = password;
+      state.user.id = id;
     },
     setName(state, name) {
-      state.name = name;
+      state.user.name = name;
+    },
+    setEmail(state, email) {
+      state.user.email = email;
+    },
+    setPassword(state, password) {
+      state.user.password = password;
     },
     setBalance(state, balance) {
-      state.balance = balance;
+      state.user.balance = balance;
     },
     setOtherUserBalance(state, other_user_balance) {
       state.other_user_balance = other_user_balance;
@@ -59,8 +62,8 @@ export default new Vuex.Store({
       firebase
         .auth()
         .createUserWithEmailAndPassword(
-          context.getters.email,
-          context.getters.password
+          context.getters.user.email,
+          context.getters.user.password
         )
         .then((response) => {
           const user = response.user;
@@ -71,8 +74,8 @@ export default new Vuex.Store({
             .set({
               id: user.uid,
               email: user.email,
-              name: context.getters.name,
-              balance: context.getters.balance,
+              name: context.getters.user.name,
+              balance: context.getters.user.balance,
             })
             .then(() => {
               router.push('/');
@@ -96,7 +99,7 @@ export default new Vuex.Store({
     signIn(context) {
       firebase
         .auth()
-        .signInWithEmailAndPassword(context.getters.email, context.getters.password)
+        .signInWithEmailAndPassword(context.getters.user.email, context.getters.user.password)
         .then((response) => {
           const user = response.user;
 
