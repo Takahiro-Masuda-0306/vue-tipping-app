@@ -45,9 +45,12 @@ export default {
   },
   methods: {
     registerUser() {
-      this.$store.commit('setName', this.name);
-      this.$store.commit('setEmail', this.email);
-      this.$store.commit('setPassword', this.password);
+      const user = {
+        name: this.name,
+        email: this.email,
+        password: this.password,
+      };
+      this.$store.commit('setUser', user);
       this.$store.dispatch('registerUser');
       this.password = '';
     },

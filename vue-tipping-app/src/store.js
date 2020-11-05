@@ -8,42 +8,20 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    user: {
-      id: '',
-      name: '',
-      email: '',
-      password: '',
-      balance: 500,
-    },
+    user: {},
     other_user_balance: 0,
     users: [],
     errors: [],
   },
   getters: {
-    // name: state => state.user.name,
-    // email: state => state.user.email,
-    // password: state => state.user.password,
-    // balance: state => state.user.balance,
     user: state => state.user,
     other_user_balance: state => state.other_user_balance,
     errors: state => state.errors,
     users: state => state.users,
   },
   mutations: {
-    setId(state, id) {
-      state.user.id = id;
-    },
-    setName(state, name) {
-      state.user.name = name;
-    },
-    setEmail(state, email) {
-      state.user.email = email;
-    },
-    setPassword(state, password) {
-      state.user.password = password;
-    },
-    setBalance(state, balance) {
-      state.user.balance = balance;
+    setUser(state, user) {
+      state.user = {...user}
     },
     setOtherUserBalance(state, other_user_balance) {
       state.other_user_balance = other_user_balance;
@@ -75,7 +53,7 @@ export default new Vuex.Store({
               id: user.uid,
               email: user.email,
               name: context.getters.user.name,
-              balance: context.getters.user.balance,
+              balance: 500,
             })
             .then(() => {
               router.push('/');
@@ -102,17 +80,18 @@ export default new Vuex.Store({
         .signInWithEmailAndPassword(context.getters.user.email, context.getters.user.password)
         .then((response) => {
           const user = response.user;
-
           firebase
             .database()
             .ref('users')
             .child(user.uid)
             .on('value', snapshot => {
-              const snapshotValue = snapshot.val();
-              context.commit('setId', snapshotValue.id);
-              context.commit('setName', snapshotValue.name);
-              context.commit('setEmail', snapshotValue.email);
-              context.commit('setBalance', snapshotValue.balance);
+              const snapshotValue = {
+                id: snapshot.val().id,
+                name: snapshot.val().name,
+                email: snapshot.val().email,
+                balance: snapshot.val().balance,
+              };
+              context.commit('setUser', snapshotValue);
             });
 
           firebase

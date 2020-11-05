@@ -40,8 +40,11 @@ export default {
   },
   methods: {
     signIn() {
-      this.$store.commit('setEmail', this.email);
-      this.$store.commit('setPassword', this.password);
+      const user = {
+        email: this.email,
+        password: this.password,
+      }
+      this.$store.commit('setUser', user);
       this.$store.dispatch('signIn');
       this.password = '';
     },
