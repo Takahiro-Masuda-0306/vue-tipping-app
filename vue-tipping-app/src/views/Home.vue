@@ -1,11 +1,3 @@
 <template>
-  <div>
-    <h1>HOME</h1>
-  </div>
+  <div class="container"></div>
 </template>
-
-<script>
-export default {
-  
-}
-</script>
