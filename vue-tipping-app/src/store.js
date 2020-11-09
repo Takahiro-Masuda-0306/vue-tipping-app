@@ -22,6 +22,11 @@ export default new Vuex.Store({
     setErrors(state, error) {
       state.errors.push(error);
     },
+    resetState(state) {
+      state.user = {};
+      state.users = [];
+      state.errors = [];
+    },
   },
   actions: {
     registerUser(context) {
@@ -101,6 +106,10 @@ export default new Vuex.Store({
           );
         });
       this.password = '';
+    },
+    signOut(context) {
+      firebase.auth().signOut();
+      context.commit('resetState');
     },
   },
 });
