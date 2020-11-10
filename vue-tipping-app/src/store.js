@@ -24,7 +24,6 @@ export default new Vuex.Store({
     },
     resetState(state) {
       state.user = {};
-      state.users = [];
       state.errors = [];
     },
   },
@@ -64,11 +63,13 @@ export default new Vuex.Store({
         })
         .catch((error) => {
           if (error.code === 'auth/email-already-in-use') {
-            context.getters.errors.push(
+            context.commit(
+              'setErrors',
               'このメールアドレスはすでに使われています。'
             );
           } else {
-            context.getters.errors.push(
+            context.commit(
+              'setErrors',
               '入力されたメールアドレスかパスワードに問題があります。'
             );
           }
@@ -108,8 +109,16 @@ export default new Vuex.Store({
       this.password = '';
     },
     signOut(context) {
-      firebase.auth().signOut();
-      context.commit('resetState');
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          context.commit('resetState');
+        })
+        .catch((error) => {
+          context.commit('setErrors', 'サインアウトできませんでした。');
+          console.log(error);
+        });
     },
   },
 });
