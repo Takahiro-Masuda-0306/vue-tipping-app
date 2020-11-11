@@ -24,7 +24,6 @@
         <div class="col-sm-6">
           <button
             class="btn btn-info mr-3"
-            @click="confirmOtherUserBalance(other.id)"
             data-toggle="modal"
             :data-target="'#confirm' + other.id"
           >
@@ -83,11 +82,6 @@
 
 <script>
 export default {
-  data() {
-    return {
-      send_amount: 0,
-    };
-  },
   mounted() {
     this.$store.dispatch('showUsers');
   },
@@ -105,10 +99,7 @@ export default {
   methods: {
     signOut() {
       this.$store.dispatch('signOut');
-    },
-    confirmOtherUserBalance(user_id) {
-      this.$store.dispatch('setOtherUserBalance', user_id);
-    },
+    }
   },
 };
 </script>

@@ -9,27 +9,17 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     user: {},
-    other_user_balance: 0,
-    send_amount: 0,
     users: [],
     errors: [],
   },
   getters: {
     user: (state) => state.user,
-    send_amount: (state) => state.send_amount,
-    other_user_balance: (state) => state.other_user_balance,
     errors: (state) => state.errors,
     users: (state) => state.users,
   },
   mutations: {
     setUser(state, user) {
       state.user = { ...state.user, ...user };
-    },
-    setOtherUserBalance(state, other_user_balance) {
-      state.other_user_balance = other_user_balance;
-    },
-    setAmount(state, send_amount) {
-      state.send_amount = send_amount;
     },
     setUsers(state, user) {
       if (user.key !== state.user.id) {
@@ -43,7 +33,6 @@ export default new Vuex.Store({
       state.user = {};
       state.users = [];
       state.errors = [];
-      state.other_user_balance = 0;
     },
   },
   actions: {
@@ -142,17 +131,11 @@ export default new Vuex.Store({
         })
         .catch((error) => {
           console.log(error);
-          context.commit('setErrors', 'サインアウトできませんでした。');
+          context.commit(
+            'setErrors',
+            'サインアウトできませんでした。'
+          );
         });
-    },
-    setOtherUserBalance(context, user_id) {
-      firebase
-        .database()
-        .ref('users')
-        .child(user_id)
-        .once('value', (snapshot) => {
-          context.commit('setOtherUserBalance', snapshot.balance);
-        });
-    },
+    }
   },
 });
