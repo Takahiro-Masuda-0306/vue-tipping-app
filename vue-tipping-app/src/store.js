@@ -9,22 +9,41 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     user: {},
+    other_user_balance: 0,
+    send_amount: 0,
+    users: [],
     errors: [],
   },
   getters: {
     user: (state) => state.user,
+    send_amount: (state) => state.send_amount,
+    other_user_balance: (state) => state.other_user_balance,
     errors: (state) => state.errors,
+    users: (state) => state.users,
   },
   mutations: {
     setUser(state, user) {
       state.user = { ...state.user, ...user };
+    },
+    setOtherUserBalance(state, other_user_balance) {
+      state.other_user_balance = other_user_balance;
+    },
+    setAmount(state, send_amount) {
+      state.send_amount = send_amount;
+    },
+    setUsers(state, user) {
+      if (user.key !== state.user.id) {
+        state.users.push(user.val());
+      }
     },
     setErrors(state, error) {
       state.errors.push(error);
     },
     resetState(state) {
       state.user = {};
+      state.users = [];
       state.errors = [];
+      state.other_user_balance = 0;
     },
   },
   actions: {
@@ -63,13 +82,11 @@ export default new Vuex.Store({
         })
         .catch((error) => {
           if (error.code === 'auth/email-already-in-use') {
-            context.commit(
-              'setErrors',
+            context.getters.errors.push(
               'このメールアドレスはすでに使われています。'
             );
           } else {
-            context.commit(
-              'setErrors',
+            context.getters.errors.push(
               '入力されたメールアドレスかパスワードに問題があります。'
             );
           }
@@ -108,6 +125,14 @@ export default new Vuex.Store({
         });
       this.password = '';
     },
+    showUsers(context) {
+      firebase
+        .database()
+        .ref('users')
+        .on('child_added', (snapshot) => {
+          context.commit('setUsers', snapshot);
+        });
+    },
     signOut(context) {
       firebase
         .auth()
@@ -116,8 +141,17 @@ export default new Vuex.Store({
           context.commit('resetState');
         })
         .catch((error) => {
-          context.commit('setErrors', 'サインアウトできませんでした。');
           console.log(error);
+          context.commit('setErrors', 'サインアウトできませんでした。');
+        });
+    },
+    setOtherUserBalance(context, user_id) {
+      firebase
+        .database()
+        .ref('users')
+        .child(user_id)
+        .once('value', (snapshot) => {
+          context.commit('setOtherUserBalance', snapshot.balance);
         });
     },
   },
