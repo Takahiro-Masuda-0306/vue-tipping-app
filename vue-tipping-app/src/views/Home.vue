@@ -11,12 +11,12 @@
     <div>
       <h2 class="text-center mb-4 mt-4">ユーザー一覧</h2>
     </div>
-    <div v-for="(error, index) in errors" :key="index">
+    <div v-for="(error, index) in errors" :key="`error-${index}`">
       <p class="font-weight-bold text-danger">{{ error }}</p>
     </div>
 
     <!-- usersの展開開始 -->
-    <div class="mb-2" v-for="(other, index) in users" :key="index">
+    <div class="mb-2" v-for="(other, index) in users" :key="`other-${index}`">
       <div class="row text-center">
         <div class="col-sm-6">
           <h3 class="font-weight-bold">{{ other.name }}</h3>
@@ -24,12 +24,17 @@
         <div class="col-sm-6">
           <button
             class="btn btn-info mr-3"
+            @click="confirmOtherUserBalance(other.id)"
             data-toggle="modal"
             :data-target="'#confirm' + other.id"
           >
             Walletを見る
           </button>
-          <button class="btn btn-info" data-toggle="modal">
+          <button
+            class="btn btn-info"
+            data-toggle="modal"
+            :data-target="'#send' + other.id"
+          >
             送る
           </button>
         </div>
@@ -75,6 +80,56 @@
         </div>
       </div>
       <!-- ウォレット確認モーダル終了 -->
+
+      <!-- ウォレット送信モーダル開始 -->
+      <div
+        class="modal fade"
+        :id="'send' + other.id"
+        tabindex="-1"
+        role="dialog"
+        aria-labelledby="modal"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ModalTitle">
+                {{ user.name }}さんの残高：{{ user.balance }}
+              </h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>送る金額</p>
+              <input type="number" v-model="send_amount" />
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                閉じる
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                data-dismiss="modal"
+                @click="sendBalance(other)"
+              >
+                送る
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ウォレット送信モーダル終了 -->
     </div>
     <!-- usersの展開終了 -->
   </div>
@@ -82,6 +137,11 @@
 
 <script>
 export default {
+  data() {
+    return {
+      send_amount: 0,
+    };
+  },
   mounted() {
     this.$store.dispatch('showUsers');
   },
@@ -99,7 +159,17 @@ export default {
   methods: {
     signOut() {
       this.$store.dispatch('signOut');
-    }
+    },
+    confirmOtherUserBalance(user_id) {
+      this.$store.dispatch('setOtherUserBalance', user_id);
+    },
+    sendBalance(other) {
+      this.$store.dispatch('sendBalance', {
+        send_amount: this.send_amount,
+        other: other,
+      });
+      this.send_amount = 0;
+    },
   },
 };
 </script>

@@ -14,17 +14,32 @@ export default new Vuex.Store({
       balance: 0,
       password: '',
     },
+    other: {
+      id: '',
+      name: '',
+      balance: 0,
+      email: '',
+    },
+    send_amount: 0,
     users: [],
     errors: [],
   },
   getters: {
     user: (state) => state.user,
+    other: (state) => state.other,
+    send_amount: (state) => state.send_amount,
     errors: (state) => state.errors,
     users: (state) => state.users,
   },
   mutations: {
     setUser(state, user) {
       state.user = { ...state.user, ...user };
+    },
+    setOtherUser(state, other) {
+      state.other = other;
+    },
+    setAmount(state, send_amount) {
+      state.send_amount = send_amount;
     },
     setUsers(state, user) {
       if (user.key !== state.user.id) {
@@ -33,6 +48,12 @@ export default new Vuex.Store({
     },
     setErrors(state, error) {
       state.errors.push(error);
+    },
+    resetUsers(state) {
+      state.users = [];
+    },
+    resetErrors(state) {
+      state.errors = [];
     },
     resetState(state) {
       state.user = {};
@@ -76,9 +97,7 @@ export default new Vuex.Store({
         })
         .catch((error) => {
           if (error.code === 'auth/email-already-in-use') {
-            getters.errors.push(
-              'このメールアドレスはすでに使われています。'
-            );
+            getters.errors.push('このメールアドレスはすでに使われています。');
           } else {
             getters.errors.push(
               '入力されたメールアドレスかパスワードに問題があります。'
@@ -89,11 +108,9 @@ export default new Vuex.Store({
     signIn({ commit, getters }) {
       firebase
         .auth()
-        .signInWithEmailAndPassword(
-          getters.user.email,
-          getters.user.password
-        )
+        .signInWithEmailAndPassword(getters.user.email, getters.user.password)
         .then((response) => {
+          commit('resetState');
           const user = response.user;
           firebase
             .database()
@@ -112,26 +129,18 @@ export default new Vuex.Store({
           router.push('/');
         })
         .catch(() => {
-          commit(
-            'setErrors',
-            'メールアドレスかパスワードに誤りがあります。'
-          );
+          commit('setErrors', 'メールアドレスかパスワードに誤りがあります。');
         });
-      this.password = '';
     },
     showUsers({ commit }) {
       firebase
         .database()
         .ref('users')
-        .on('child_added', (snapshot) => {
-          commit('setUsers', snapshot);
-        })
-        .catch((error) => {
-          commit(
-            'setErrors',
-            'ユーザー情報を正しく取得できませんでした。'
-          );
-          console.log(error);
+        .on('value', (snapshot) => {
+          commit('resetUsers');
+          snapshot.forEach((user) => {
+            commit('setUsers', user);
+          });
         });
     },
     signOut({ commit }) {
@@ -145,6 +154,73 @@ export default new Vuex.Store({
           console.log(error);
           commit('setErrors', 'サインアウトできませんでした。');
         });
+    },
+    setOtherUserBalance({ commit }, user_id) {
+      firebase
+        .database()
+        .ref('users')
+        .child(user_id)
+        .once('value', (snapshot) => {
+          const other_balance = {
+            balance: snapshot.val().balance,
+          };
+          commit('setOtherUser', other_balance);
+        })
+        .catch(() => {
+          commit(
+            'setErrors',
+            'ユーザーのウォレット情報を取得できませんでした。'
+          );
+        });
+    },
+    sendBalance({ commit, getters }, { send_amount, other }) {
+      commit('resetErrors');
+      commit('setAmount', send_amount);
+      const current_user_balance = getters.user.balance;
+      const get_send_amount = getters.send_amount;
+
+      if (get_send_amount !== 0) {
+        if (get_send_amount < current_user_balance) {
+          const usersRef = firebase.database().ref('users');
+          const user = {
+            balance: current_user_balance - get_send_amount,
+          };
+          const other_user = {
+            id: other.id,
+            name: other.name,
+            balance: other.balance,
+            email: other.email,
+          };
+          commit('setOtherUser', other_user);
+
+          //ログインユーザーのデータベース更新
+          usersRef
+            .child(getters.user.id)
+            .update({
+              balance: current_user_balance - get_send_amount,
+            })
+            .then(() => {
+              //otherユーザーのデータベース更新
+              usersRef.child(other.id).update({
+                balance: Number(other.balance) + Number(get_send_amount),
+              });
+
+              //ログインユーザーのstate更新
+              commit('setUser', user);
+            })
+            .catch((error) => {
+              console.log(error);
+              commit(
+                'setErrors',
+                'ウォレットを送れませんでした。再度お試しください。'
+              );
+            });
+        } else {
+          commit('setErrors', '残高が足りません。');
+        }
+      } else {
+        commit('setErrors', '0より大きい数値を入力してください。');
+      }
     },
   },
 });
