@@ -8,32 +8,45 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    user: {},
+    user: {
+      name: '',
+      email: '',
+      balance: 0,
+      password: '',
+    },
+    users: [],
     errors: [],
   },
   getters: {
     user: (state) => state.user,
     errors: (state) => state.errors,
+    users: (state) => state.users,
   },
   mutations: {
     setUser(state, user) {
       state.user = { ...state.user, ...user };
+    },
+    setUsers(state, user) {
+      if (user.key !== state.user.id) {
+        state.users.push(user.val());
+      }
     },
     setErrors(state, error) {
       state.errors.push(error);
     },
     resetState(state) {
       state.user = {};
+      state.users = [];
       state.errors = [];
     },
   },
   actions: {
-    registerUser(context) {
+    registerUser({ commit, getters }) {
       firebase
         .auth()
         .createUserWithEmailAndPassword(
-          context.getters.user.email,
-          context.getters.user.password
+          getters.user.email,
+          getters.user.password
         )
         .then((response) => {
           const user = response.user;
@@ -44,17 +57,17 @@ export default new Vuex.Store({
             .set({
               id: user.uid,
               email: user.email,
-              name: context.getters.user.name,
+              name: getters.user.name,
               balance: 500,
             })
             .then(() => {
               const userInfo = {
                 id: user.uid,
                 email: user.email,
-                name: context.getters.user.name,
+                name: getters.user.name,
                 balance: 500,
               };
-              context.commit('setUser', userInfo);
+              commit('setUser', userInfo);
               router.push('/');
             })
             .catch((error) => {
@@ -63,24 +76,22 @@ export default new Vuex.Store({
         })
         .catch((error) => {
           if (error.code === 'auth/email-already-in-use') {
-            context.commit(
-              'setErrors',
+            getters.errors.push(
               'このメールアドレスはすでに使われています。'
             );
           } else {
-            context.commit(
-              'setErrors',
+            getters.errors.push(
               '入力されたメールアドレスかパスワードに問題があります。'
             );
           }
         });
     },
-    signIn(context) {
+    signIn({ commit, getters }) {
       firebase
         .auth()
         .signInWithEmailAndPassword(
-          context.getters.user.email,
-          context.getters.user.password
+          getters.user.email,
+          getters.user.password
         )
         .then((response) => {
           const user = response.user;
@@ -95,29 +106,44 @@ export default new Vuex.Store({
                 email: snapshot.val().email,
                 balance: snapshot.val().balance,
               };
-              context.commit('setUser', snapshotValue);
+              commit('setUser', snapshotValue);
             });
 
           router.push('/');
         })
         .catch(() => {
-          context.commit(
+          commit(
             'setErrors',
             'メールアドレスかパスワードに誤りがあります。'
           );
         });
       this.password = '';
     },
-    signOut(context) {
+    showUsers({ commit }) {
+      firebase
+        .database()
+        .ref('users')
+        .on('child_added', (snapshot) => {
+          commit('setUsers', snapshot);
+        })
+        .catch((error) => {
+          commit(
+            'setErrors',
+            'ユーザー情報を正しく取得できませんでした。'
+          );
+          console.log(error);
+        });
+    },
+    signOut({ commit }) {
       firebase
         .auth()
         .signOut()
         .then(() => {
-          context.commit('resetState');
+          commit('resetState');
         })
         .catch((error) => {
-          context.commit('setErrors', 'サインアウトできませんでした。');
           console.log(error);
+          commit('setErrors', 'サインアウトできませんでした。');
         });
     },
   },
