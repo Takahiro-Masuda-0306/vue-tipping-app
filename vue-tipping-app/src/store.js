@@ -193,18 +193,19 @@ export default new Vuex.Store({
           };
           commit('setOtherUser', other_user);
 
-          //ログインユーザーのデータベース更新
           usersRef
-            .child(getters.user.id)
-            .update({
-              balance: current_user_balance - get_send_amount,
-            })
-            .then(() => {
+            .transaction(function() {
+              //ログインユーザーのデータベース更新
+              usersRef.child(getters.user.id).update({
+                balance: current_user_balance - get_send_amount,
+              });
+
               //otherユーザーのデータベース更新
               usersRef.child(other.id).update({
                 balance: Number(other.balance) + Number(get_send_amount),
               });
-
+            })
+            .then(() => {
               //ログインユーザーのstate更新
               commit('setUser', user);
             })
@@ -212,7 +213,7 @@ export default new Vuex.Store({
               console.log(error);
               commit(
                 'setErrors',
-                'ウォレットを送れませんでした。再度お試しください。'
+                'ウォレットを送信できませんでした。再度お試しください。'
               );
             });
         } else {
