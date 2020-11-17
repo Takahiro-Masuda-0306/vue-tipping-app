@@ -20,14 +20,14 @@ export default new Vuex.Store({
       balance: 0,
       email: '',
     },
-    send_amount: 0,
+    sendAmount: 0,
     users: [],
     errors: [],
   },
   getters: {
     user: (state) => state.user,
     other: (state) => state.other,
-    send_amount: (state) => state.send_amount,
+    sendAmount: (state) => state.sendAmount,
     errors: (state) => state.errors,
     users: (state) => state.users,
   },
@@ -38,8 +38,8 @@ export default new Vuex.Store({
     setOtherUser(state, other) {
       state.other = other;
     },
-    setAmount(state, send_amount) {
-      state.send_amount = send_amount;
+    setAmount(state, sendAmount) {
+      state.sendAmount = sendAmount;
     },
     setUsers(state, user) {
       if (user.key !== state.user.id) {
@@ -155,16 +155,16 @@ export default new Vuex.Store({
           commit('setErrors', 'サインアウトできませんでした。');
         });
     },
-    setOtherUserBalance({ commit }, user_id) {
+    setOtherUserBalance({ commit }, userId) {
       firebase
         .database()
         .ref('users')
-        .child(user_id)
+        .child(userId)
         .once('value', (snapshot) => {
-          const other_balance = {
+          const otherBalance = {
             balance: snapshot.val().balance,
           };
-          commit('setOtherUser', other_balance);
+          commit('setOtherUser', otherBalance);
         })
         .catch(() => {
           commit(
@@ -173,36 +173,36 @@ export default new Vuex.Store({
           );
         });
     },
-    sendBalance({ commit, getters }, { send_amount, other }) {
+    sendBalance({ commit, getters }, { sendAmount, other }) {
       commit('resetErrors');
-      commit('setAmount', send_amount);
-      const current_user_balance = getters.user.balance;
-      const get_send_amount = getters.send_amount;
+      commit('setAmount', sendAmount);
+      const currentUserBalance = getters.user.balance;
+      const getSendAmount = getters.sendAmount;
 
-      if (get_send_amount !== 0) {
-        if (get_send_amount < current_user_balance) {
+      if (getSendAmount !== 0) {
+        if (getSendAmount < currentUserBalance) {
           const usersRef = firebase.database().ref('users');
           const user = {
-            balance: current_user_balance - get_send_amount,
+            balance: currentUserBalance - getSendAmount,
           };
-          const other_user = {
+          const otherUser = {
             id: other.id,
             name: other.name,
             balance: other.balance,
             email: other.email,
           };
-          commit('setOtherUser', other_user);
+          commit('setOtherUser', otherUser);
 
           usersRef
             .transaction(function() {
               //ログインユーザーのデータベース更新
               usersRef.child(getters.user.id).update({
-                balance: current_user_balance - get_send_amount,
+                balance: currentUserBalance - getSendAmount,
               });
 
               //otherユーザーのデータベース更新
               usersRef.child(other.id).update({
-                balance: Number(other.balance) + Number(get_send_amount),
+                balance: Number(other.balance) + Number(getSendAmount),
               });
             })
             .then(() => {

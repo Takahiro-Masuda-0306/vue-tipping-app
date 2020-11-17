@@ -107,7 +107,7 @@
             </div>
             <div class="modal-body">
               <p>送る金額</p>
-              <input type="number" v-model="send_amount" />
+              <input type="number" v-model="sendAmount" />
             </div>
             <div class="modal-footer">
               <button
@@ -139,7 +139,7 @@
 export default {
   data() {
     return {
-      send_amount: 0,
+      sendAmount: 0,
     };
   },
   mounted() {
@@ -160,15 +160,15 @@ export default {
     signOut() {
       this.$store.dispatch('signOut');
     },
-    confirmOtherUserBalance(user_id) {
-      this.$store.dispatch('setOtherUserBalance', user_id);
+    confirmOtherUserBalance(userId) {
+      this.$store.dispatch('setOtherUserBalance', userId);
     },
     sendBalance(other) {
       this.$store.dispatch('sendBalance', {
-        send_amount: this.send_amount,
+        sendAmount: this.sendAmount,
         other: other,
       });
-      this.send_amount = 0;
+      this.sendAmount = 0;
     },
   },
 };
